@@ -275,24 +275,46 @@ def generar_grafico(af, nombre_archivo, es_afn=True):
 
 # Función principal para procesar el archivo
 def procesar_archivo(nombre_archivo):
-    with open(nombre_archivo, 'r') as archivo:
+    with open(nombre_archivo, 'r', encoding='utf-8') as archivo:
         for linea in archivo:
-            expresion_regular, cadena = linea.strip().split(',')
-            print(f"Procesando: r = {expresion_regular}, w = {cadena}")
-            postfix = infix_a_postfix(expresion_regular.strip())
+            linea = linea.strip()
+            
+            # Verificar si la línea contiene una coma (para el caso de expresión y cadena)
+            if ',' in linea:
+                expresion_regular, cadena = linea.split(',')
+                expresion_regular = expresion_regular.strip()  # Eliminar espacios en blanco de la expresión regular
+                cadena = cadena.strip()  # Eliminar espacios en blanco de la cadena
+                print(f"Procesando: r = {expresion_regular}, w = {cadena}")
+            else:
+                # Caso donde solo hay una expresión regular
+                expresion_regular = linea.strip()
+                cadena = ""  # Asignar cadena vacía si no hay cadena proporcionada
+                print(f"Procesando: r = {expresion_regular}")
+
+            # Convertir la expresión regular a postfix
+            postfix = infix_a_postfix(expresion_regular)
             print(f"Postfix: {postfix}")
+            
+            # Construir el AFN con Thompson
             afn = thompson(postfix)
             generar_grafico(afn, 'afn_grafo', es_afn=True)
+            
+            # Convertir AFN a AFD
             afd = subconjuntos(afn)
             generar_grafico(afd, 'afd_grafo', es_afn=False)
+            
+            # Minimizar el AFD
             afd_min = minimizar_afd(afd)
             generar_grafico(afd_min, 'afd_min_grafo', es_afn=False)
-            # Simulaciones
-            resultado_afn = simular_afn(afn, cadena.strip())
-            resultado_afd = simular_afd(afd_min, cadena.strip())
+            
+            # Simulación del AFN
+            resultado_afn = simular_afn(afn, cadena)
+            # Simulación del AFD minimizado
+            resultado_afd = simular_afd(afd_min, cadena)
+            
+            # Mostrar los resultados
             print(f"Resultado AFN: {'sí' if resultado_afn else 'no'}")
             print(f"Resultado AFD: {'sí' if resultado_afd else 'no'}")
 
-# Ejemplo de uso
 if __name__ == '__main__':
     procesar_archivo('expresiones_regulares.txt')
